@@ -7,10 +7,10 @@ import os
 # 1. CONFIGURACIÓN DEL PIN Y DATOS
 # ==========================================
 # Cambia "1234" por la clave que tú quieras (mantén las comillas)
-PIN_ADMIN = "1234" 
+PIN_ADMIN = "5678" 
 
 # Nombre exacto de tu archivo de imagen que subiste a GitHub
-ARCHIVO_LOGO = "logo.png"
+ARCHIVO_LOGO = "Footer_Global.png"
 
 COLABORADORAS = ["Erika", "Marcela"]
 INMUEBLES = [
