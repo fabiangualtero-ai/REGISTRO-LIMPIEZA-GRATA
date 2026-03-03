@@ -7,10 +7,7 @@ import os
 # 1. CONFIGURACIÓN DEL PIN Y DATOS
 # ==========================================
 PIN_ADMIN = "1234" 
-
-# Nombre de tu logo (asegúrate de que en GitHub termine en .png o .jpg)
 ARCHIVO_LOGO = "Footer_Global.png" 
-
 ARCHIVO_REGISTROS = "registro_limpieza.csv"
 
 COLABORADORAS = ["Erika", "Marcela"]
@@ -24,45 +21,61 @@ ACTIVIDADES = [
 ]
 
 # ==========================================
-# 2. DISEÑO PROFESIONAL (FONDO BLANCO + ESTILO TIERRA)
+# 2. DISEÑO CON COLORES TIERRA REFORZADOS
 # ==========================================
 st.set_page_config(page_title="Gestión de Limpieza", layout="centered")
 
+# CSS Reforzado para asegurar que los colores se muestren
 st.markdown("""
     <style>
+    /* Fondo Blanco */
     .stApp {
-        background-color: #FFFFFF;
+        background-color: #FFFFFF !important;
     }
-    h1, h2, h3 {
-        color: #3E2723 !important;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    
+    /* Títulos en Marrón Tierra */
+    h1, h2, h3, .stSubheader {
+        color: #5D4037 !important;
+        font-family: 'Segoe UI', sans-serif;
+        font-weight: bold;
     }
-    .stButton>button {
-        background-color: #8D6E63 !important;
+
+    /* Botón GUARDAR en color Terracota */
+    div.stButton > button {
+        background-color: #A1887F !important;
         color: white !important;
-        border: none !important;
-        border-radius: 6px !important;
-        padding: 0.6rem 2rem !important;
+        border: 2px solid #8D6E63 !important;
+        border-radius: 10px !important;
+        width: 100%;
+        height: 3em;
+        font-size: 18px;
+        font-weight: bold;
     }
-    .stButton>button:hover {
+
+    /* Cambio de color al pasar el mouse por el botón */
+    div.stButton > button:hover {
         background-color: #5D4037 !important;
+        color: #F9F7F2 !important;
+    }
+
+    /* Color de la franja del slider de horas */
+    .stSlider > div > div > div > div {
+        background-color: #A1887F !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# LÓGICA PARA MOSTRAR EL LOGO
+# MOSTRAR EL LOGO
 if os.path.exists(ARCHIVO_LOGO):
     col1, col2, col3 = st.columns([1,2,1])
     with col2:
         st.image(ARCHIVO_LOGO, use_container_width=True)
-else:
-    st.info("💡 Sube tu logo a GitHub con el nombre Footer_Global.png para verlo aquí.")
 
 st.markdown("<h1 style='text-align: center;'>Gestión de Limpieza</h1>", unsafe_allow_html=True)
 st.write("---")
 
 # ==========================================
-# 3. FORMULARIO DE REGISTRO
+# 3. FORMULARIO CON HORARIO DE 10:00 A 18:00
 # ==========================================
 with st.form("registro_trabajo", clear_on_submit=True):
     st.subheader("📝 Registrar Jornada")
@@ -74,15 +87,19 @@ with st.form("registro_trabajo", clear_on_submit=True):
     
     with col2:
         fecha = st.date_input("Fecha del servicio:", datetime.now())
+        
+        # NUEVA FRANJA HORARIA: 10:00 a 18:00
+        opciones_horas = [time(h, m) for h in range(10, 18) for m in (0, 30)] + [time(18, 0)]
         h_inicio, h_fin = st.select_slider(
             "Rango de Horario:",
-            options=[time(h, m) for h in range(6, 23) for m in (0, 30)],
-            value=(time(9, 0), time(12, 0))
+            options=opciones_horas,
+            value=(time(10, 0), time(14, 0))
         )
     
     st.write("---")
     tareas = st.multiselect("Actividades realizadas:", ACTIVIDADES)
-    # AQUÍ ESTABA EL ERROR (Línea 87 corregida):
+    
+    # Línea de lavadas corregida para evitar errores de sintaxis
     lavadas = st.number_input("Número de lavadas realizadas:", min_value=0, step=1, value=0)
     
     notas = st.text_area("Observaciones adicionales:")
