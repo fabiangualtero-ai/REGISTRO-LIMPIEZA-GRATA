@@ -8,8 +8,7 @@ import os
 # ==========================================
 PIN_ADMIN = "1234" 
 
-# CAMBIO AQUÍ: He puesto el nombre que me indicaste
-# Si en GitHub ves que termina en .jpg, cámbialo aquí abajo
+# Nombre de tu logo (asegúrate de que en GitHub termine en .png o .jpg)
 ARCHIVO_LOGO = "Footer_Global.png" 
 
 ARCHIVO_REGISTROS = "registro_limpieza.csv"
@@ -25,7 +24,7 @@ ACTIVIDADES = [
 ]
 
 # ==========================================
-# 2. DISEÑO PROFESIONAL (FONDO BLANCO)
+# 2. DISEÑO PROFESIONAL (FONDO BLANCO + ESTILO TIERRA)
 # ==========================================
 st.set_page_config(page_title="Gestión de Limpieza", layout="centered")
 
@@ -57,8 +56,7 @@ if os.path.exists(ARCHIVO_LOGO):
     with col2:
         st.image(ARCHIVO_LOGO, use_container_width=True)
 else:
-    # Esto te ayudará a saber si el nombre está mal
-    st.warning(f"⚠️ No se encuentra el archivo '{ARCHIVO_LOGO}'. Revisa la extensión (.png o .jpg) en GitHub.")
+    st.info("💡 Sube tu logo a GitHub con el nombre Footer_Global.png para verlo aquí.")
 
 st.markdown("<h1 style='text-align: center;'>Gestión de Limpieza</h1>", unsafe_allow_html=True)
 st.write("---")
@@ -84,4 +82,52 @@ with st.form("registro_trabajo", clear_on_submit=True):
     
     st.write("---")
     tareas = st.multiselect("Actividades realizadas:", ACTIVIDADES)
-    lavadas = st.
+    # AQUÍ ESTABA EL ERROR (Línea 87 corregida):
+    lavadas = st.number_input("Número de lavadas realizadas:", min_value=0, step=1, value=0)
+    
+    notas = st.text_area("Observaciones adicionales:")
+    
+    boton_guardar = st.form_submit_button("GUARDAR DATOS")
+
+# LÓGICA DE GUARDADO
+if boton_guardar:
+    dt_i = datetime.combine(fecha, h_inicio)
+    dt_f = datetime.combine(fecha, h_fin)
+    total_horas = round((dt_f - dt_i).total_seconds() / 3600, 2)
+    
+    nuevo_dato = pd.DataFrame([{
+        "Fecha": fecha.strftime("%d/%m/%Y"),
+        "Nombre": empleada,
+        "Inmueble": lugar,
+        "Horas": total_horas,
+        "Tareas": ", ".join(tareas),
+        "Lavadas": lavadas,
+        "Notas": notas
+    }])
+    
+    if not os.path.exists(ARCHIVO_REGISTROS):
+        nuevo_dato.to_csv(ARCHIVO_REGISTROS, index=False)
+    else:
+        nuevo_dato.to_csv(ARCHIVO_REGISTROS, mode='a', header=False, index=False)
+    
+    st.success(f"✅ ¡Registro guardado! Gracias, {empleada}.")
+
+# ==========================================
+# 4. ZONA PRIVADA (ADMIN)
+# ==========================================
+st.write("---")
+st.subheader("🔐 Panel de Administración")
+password = st.text_input("Introduce el PIN para descargar:", type="password")
+
+if password == PIN_ADMIN:
+    st.info("Acceso autorizado")
+    if os.path.exists(ARCHIVO_REGISTROS):
+        df = pd.read_csv(ARCHIVO_REGISTROS)
+        st.dataframe(df.tail(10), use_container_width=True)
+        csv = df.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="📥 DESCARGAR HISTORIAL COMPLETO",
+            data=csv,
+            file_name=f"reporte_limpieza_{datetime.now().strftime('%Y%m%d')}.csv",
+            mime="text/csv"
+        )
