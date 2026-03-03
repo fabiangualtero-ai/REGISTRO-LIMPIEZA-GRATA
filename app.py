@@ -7,7 +7,11 @@ import os
 # 1. CONFIGURACIÓN DEL PIN Y DATOS
 # ==========================================
 PIN_ADMIN = "1234" 
-ARCHIVO_LOGO = "logo.png"
+
+# CAMBIO AQUÍ: He puesto el nombre que me indicaste
+# Si en GitHub ves que termina en .jpg, cámbialo aquí abajo
+ARCHIVO_LOGO = "Footer_Global.png" 
+
 ARCHIVO_REGISTROS = "registro_limpieza.csv"
 
 COLABORADORAS = ["Erika", "Marcela"]
@@ -21,25 +25,19 @@ ACTIVIDADES = [
 ]
 
 # ==========================================
-# 2. DISEÑO PROFESIONAL (FONDO BLANCO + DETALLES TIERRA)
+# 2. DISEÑO PROFESIONAL (FONDO BLANCO)
 # ==========================================
 st.set_page_config(page_title="Gestión de Limpieza", layout="centered")
 
-# CSS para integrar el logo blanco y mantener estilo tierra
 st.markdown("""
     <style>
-    /* Fondo Blanco para que el logo se integre perfectamente */
     .stApp {
         background-color: #FFFFFF;
     }
-    
-    /* Títulos en Marrón Tierra Oscuro */
     h1, h2, h3 {
         color: #3E2723 !important;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-
-    /* Estilo de los Botones en color Arcilla/Tierra */
     .stButton>button {
         background-color: #8D6E63 !important;
         color: white !important;
@@ -47,24 +45,20 @@ st.markdown("""
         border-radius: 6px !important;
         padding: 0.6rem 2rem !important;
     }
-    
     .stButton>button:hover {
         background-color: #5D4037 !important;
-        border: 1px solid #3E2723 !important;
-    }
-
-    /* Bordes de los campos en color arena suave */
-    .stTextInput>div>div>input, .stSelectbox>div>div>div {
-        border-color: #E0E0E0 !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# MOSTRAR EL LOGO (Centrado y sin bordes visibles)
+# LÓGICA PARA MOSTRAR EL LOGO
 if os.path.exists(ARCHIVO_LOGO):
     col1, col2, col3 = st.columns([1,2,1])
     with col2:
         st.image(ARCHIVO_LOGO, use_container_width=True)
+else:
+    # Esto te ayudará a saber si el nombre está mal
+    st.warning(f"⚠️ No se encuentra el archivo '{ARCHIVO_LOGO}'. Revisa la extensión (.png o .jpg) en GitHub.")
 
 st.markdown("<h1 style='text-align: center;'>Gestión de Limpieza</h1>", unsafe_allow_html=True)
 st.write("---")
@@ -90,59 +84,4 @@ with st.form("registro_trabajo", clear_on_submit=True):
     
     st.write("---")
     tareas = st.multiselect("Actividades realizadas:", ACTIVIDADES)
-    lavadas = st.number_input("Número de lavadas:", min_value=0, step=1, value=0)
-    notas = st.text_area("Observaciones adicionales:")
-    
-    boton_guardar = st.form_submit_button("GUARDAR DATOS")
-
-# LÓGICA DE GUARDADO
-if boton_guardar:
-    dt_i = datetime.combine(fecha, h_inicio)
-    dt_f = datetime.combine(fecha, h_fin)
-    total_horas = round((dt_f - dt_i).total_seconds() / 3600, 2)
-    
-    nuevo_dato = pd.DataFrame([{
-        "Fecha": fecha.strftime("%d/%m/%Y"),
-        "Nombre": empleada,
-        "Inmueble": lugar,
-        "Horas": total_horas,
-        "Tareas": ", ".join(tareas),
-        "Lavadas": lavadas,
-        "Notas": notas
-    }])
-    
-    if not os.path.exists(ARCHIVO_REGISTROS):
-        nuevo_dato.to_csv(ARCHIVO_REGISTROS, index=False)
-    else:
-        nuevo_dato.to_csv(ARCHIVO_REGISTROS, mode='a', header=False, index=False)
-    
-    st.success(f"✅ ¡Registro guardado! Gracias por tu trabajo, {empleada}.")
-
-# ==========================================
-# 4. ZONA PRIVADA (ADMIN)
-# ==========================================
-st.write("---")
-st.subheader("🔐 Panel de Administración")
-
-password = st.text_input("Introduce el PIN para descargar:", type="password")
-
-if password == PIN_ADMIN:
-    st.info("Acceso autorizado")
-    if os.path.exists(ARCHIVO_REGISTROS):
-        df = pd.read_csv(ARCHIVO_REGISTROS)
-        
-        # Vista rápida de los últimos registros
-        st.dataframe(df.tail(10), use_container_width=True)
-        
-        # Botón de descarga
-        csv = df.to_csv(index=False).encode('utf-8')
-        st.download_button(
-            label="📥 DESCARGAR HISTORIAL COMPLETO",
-            data=csv,
-            file_name=f"reporte_limpieza_{datetime.now().strftime('%Y%m%d')}.csv",
-            mime="text/csv"
-        )
-    else:
-        st.warning("Aún no hay registros en la base de datos.")
-elif password != "":
-    st.error("PIN incorrecto.")
+    lavadas = st.
