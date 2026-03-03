@@ -6,11 +6,9 @@ import os
 # ==========================================
 # 1. CONFIGURACIÓN DEL PIN Y DATOS
 # ==========================================
-# Cambia "1234" por la clave que tú quieras (mantén las comillas)
-PIN_ADMIN = "5678" 
-
-# Nombre exacto de tu archivo de imagen que subiste a GitHub
-ARCHIVO_LOGO = "Footer_Global.png"
+PIN_ADMIN = "1234" 
+ARCHIVO_LOGO = "logo.png"
+ARCHIVO_REGISTROS = "registro_limpieza.csv"
 
 COLABORADORAS = ["Erika", "Marcela"]
 INMUEBLES = [
@@ -21,120 +19,130 @@ ACTIVIDADES = [
     "Planchado", "Limpieza General", "Limpieza Profunda", 
     "Tender Camas", "Organizar Closets", "Compra de Implementos de aseo"
 ]
-ARCHIVO_REGISTROS = "registro_limpieza.csv"
 
 # ==========================================
-# 2. CONFIGURACIÓN DE LA PÁGINA (LOGO Y TÍTULO)
+# 2. DISEÑO PROFESIONAL (FONDO BLANCO + DETALLES TIERRA)
 # ==========================================
-# Configuramos la pestaña del navegador
 st.set_page_config(page_title="Gestión de Limpieza", layout="centered")
 
-# MOSTRAR EL LOGO CENTRADO (si existe)
-# Truco para centrar: usamos columnas y ponemos la imagen en la central.
-if os.path.exists(ARCHIVO_LOGO):
-    col1, col2, col3 = st.columns([1,1,1]) # Divide el ancho en 3 partes iguales
-    with col2: # Usamos la columna del centro
-        # Puedes ajustar el 'width' (ancho) si el logo se ve muy grande o pequeño.
-        st.image(ARCHIVO_LOGO, width=180) 
+# CSS para integrar el logo blanco y mantener estilo tierra
+st.markdown("""
+    <style>
+    /* Fondo Blanco para que el logo se integre perfectamente */
+    .stApp {
+        background-color: #FFFFFF;
+    }
+    
+    /* Títulos en Marrón Tierra Oscuro */
+    h1, h2, h3 {
+        color: #3E2723 !important;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
 
-# TÍTULO PRINCIPAL DE LA APP (más profesional, sin emojis)
+    /* Estilo de los Botones en color Arcilla/Tierra */
+    .stButton>button {
+        background-color: #8D6E63 !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 6px !important;
+        padding: 0.6rem 2rem !important;
+    }
+    
+    .stButton>button:hover {
+        background-color: #5D4037 !important;
+        border: 1px solid #3E2723 !important;
+    }
+
+    /* Bordes de los campos en color arena suave */
+    .stTextInput>div>div>input, .stSelectbox>div>div>div {
+        border-color: #E0E0E0 !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+# MOSTRAR EL LOGO (Centrado y sin bordes visibles)
+if os.path.exists(ARCHIVO_LOGO):
+    col1, col2, col3 = st.columns([1,2,1])
+    with col2:
+        st.image(ARCHIVO_LOGO, use_container_width=True)
+
 st.markdown("<h1 style='text-align: center;'>Gestión de Limpieza</h1>", unsafe_allow_html=True)
 st.write("---")
 
 # ==========================================
-# 3. FORMULARIO PARA ERIKA Y MARCELA
+# 3. FORMULARIO DE REGISTRO
 # ==========================================
 with st.form("registro_trabajo", clear_on_submit=True):
-    st.subheader("Nueva Entrada de Servicio")
+    st.subheader("📝 Registrar Jornada")
     col1, col2 = st.columns(2)
     
     with col1:
-        empleada = st.selectbox("Selecciona tu nombre:", COLABORADORAS)
-        lugar = st.selectbox("Inmueble / Lugar:", INMUEBLES)
+        empleada = st.selectbox("Colaboradora:", COLABORADORAS)
+        lugar = st.selectbox("Inmueble:", INMUEBLES)
     
     with col2:
-        fecha = st.date_input("Fecha:", datetime.now())
-        # Selector de horario (de 6:00 a 23:00, cada 30 min)
+        fecha = st.date_input("Fecha del servicio:", datetime.now())
         h_inicio, h_fin = st.select_slider(
-            "Rango de Horario (Inicio - Fin):",
+            "Rango de Horario:",
             options=[time(h, m) for h in range(6, 23) for m in (0, 30)],
-            value=(time(9, 0), time(12, 0)) # Valores por defecto (9:00 a 12:00)
+            value=(time(9, 0), time(12, 0))
         )
     
     st.write("---")
-    tareas = st.multiselect("Actividades principales realizadas:", ACTIVIDADES)
-    lavadas = st.number_input("Número (#) de lavadas realizadas:", min_value=0, step=1, value=0)
-    notas = st.text_area("Notas adicionales (opcional):")
+    tareas = st.multiselect("Actividades realizadas:", ACTIVIDADES)
+    lavadas = st.number_input("Número de lavadas:", min_value=0, step=1, value=0)
+    notas = st.text_area("Observaciones adicionales:")
     
-    # BOTÓN PARA GUARDAR
-    boton_guardar = st.form_submit_button("GUARDAR REGISTRO")
+    boton_guardar = st.form_submit_button("GUARDAR DATOS")
 
-# LÓGICA DE ALMACENAMIENTO DE DATOS
+# LÓGICA DE GUARDADO
 if boton_guardar:
-    # Calcular horas totales automáticamente
     dt_i = datetime.combine(fecha, h_inicio)
     dt_f = datetime.combine(fecha, h_fin)
-    dif = dt_f - dt_i
-    total_horas = round(dif.total_seconds() / 3600, 2)
+    total_horas = round((dt_f - dt_i).total_seconds() / 3600, 2)
     
-    # Crear el nuevo registro
     nuevo_dato = pd.DataFrame([{
         "Fecha": fecha.strftime("%d/%m/%Y"),
         "Nombre": empleada,
         "Inmueble": lugar,
-        "Inicio": h_inicio.strftime("%H:%M"),
-        "Fin": h_fin.strftime("%H:%M"),
-        "Total_Horas": total_horas,
+        "Horas": total_horas,
         "Tareas": ", ".join(tareas),
-        "Num_Lavadas": lavadas,
-        "Comentarios": notas
+        "Lavadas": lavadas,
+        "Notas": notas
     }])
     
-    # Guardar en el archivo CSV (añadir al final)
     if not os.path.exists(ARCHIVO_REGISTROS):
         nuevo_dato.to_csv(ARCHIVO_REGISTROS, index=False)
     else:
         nuevo_dato.to_csv(ARCHIVO_REGISTROS, mode='a', header=False, index=False)
     
-    st.success(f"✅ ¡Registro guardado para {empleada} en {lugar}!")
+    st.success(f"✅ ¡Registro guardado! Gracias por tu trabajo, {empleada}.")
 
 # ==========================================
-# 4. ZONA PRIVADA (ADMINISTRADOR CON PIN)
+# 4. ZONA PRIVADA (ADMIN)
 # ==========================================
 st.write("---")
-st.subheader("🔐 Acceso Administrador (Filtros y Descarga)")
+st.subheader("🔐 Panel de Administración")
 
-# Cuadro para escribir el PIN (type="password" oculta los números)
-password = st.text_input("Introduce el PIN para ver reportes:", type="password")
+password = st.text_input("Introduce el PIN para descargar:", type="password")
 
 if password == PIN_ADMIN:
-    st.success("Acceso concedido")
+    st.info("Acceso autorizado")
     if os.path.exists(ARCHIVO_REGISTROS):
         df = pd.read_csv(ARCHIVO_REGISTROS)
         
-        # Filtros opcionales para facilitar la vista
-        st.write("### Filtrar registros:")
-        col_f1, col_f2 = st.columns(2)
-        filtro_nombre = col_f1.multiselect("Filtrar por nombre:", COLABORADORAS, default=COLABORADORAS)
-        filtro_inmueble = col_f2.multiselect("Filtrar por inmueble:", INMUEBLES, default=INMUEBLES)
+        # Vista rápida de los últimos registros
+        st.dataframe(df.tail(10), use_container_width=True)
         
-        df_filtrado = df[
-            (df['Nombre'].isin(filtro_nombre)) & 
-            (df['Inmueble'].isin(filtro_inmueble))
-        ]
-        
-        # Mostrar la tabla de datos
-        st.dataframe(df_filtrado, use_container_width=True)
-        
-        # BOTÓN DE DESCARGA PARA EXCEL (CSV)
-        csv = df_filtrado.to_csv(index=False).encode('utf-8')
+        # Botón de descarga
+        csv = df.to_csv(index=False).encode('utf-8')
         st.download_button(
-            label="📥 DESCARGAR ESTA VISTA (CSV para Excel)",
+            label="📥 DESCARGAR HISTORIAL COMPLETO",
             data=csv,
-            file_name=f"reporte_limpieza_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
+            file_name=f"reporte_limpieza_{datetime.now().strftime('%Y%m%d')}.csv",
             mime="text/csv"
         )
     else:
-        st.info("No hay datos registrados todavía.")
+        st.warning("Aún no hay registros en la base de datos.")
 elif password != "":
-    st.error("PIN incorrecto. Inténtalo de nuevo.")
+    st.error("PIN incorrecto.")
